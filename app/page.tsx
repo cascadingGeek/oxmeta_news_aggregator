@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { TerminalHeader } from './components/TerminalHeader';
-import { Toolbar } from './components/Toolbar';
-import { NewsColumn } from './components/NewsColumn';
-import { CategoryPills } from './components/CategoryPills';
-import { CATEGORIES } from './constants';
-import { generateMarketBriefing } from './services/geminiService';
-import { X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+"use client";
 
-const App: React.FC = () => {
+import React, { useState } from 'react';
+import { TerminalHeader } from '@/components/TerminalHeader';
+import { Toolbar } from '@/components/Toolbar';
+import { NewsColumn } from '@/components/NewsColumn';
+import { CategoryPills } from '@/components/CategoryPills';
+import { CATEGORIES } from '@/constants';
+import { generateMarketBriefingAction } from './actions';
+import { X, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+
+export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [briefing, setBriefing] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -31,13 +34,14 @@ const App: React.FC = () => {
   const handleGenerateBriefing = async () => {
     setIsGenerating(true);
     const allItems = filteredCategories.flatMap(c => c.items).slice(0, 15);
-    const result = await generateMarketBriefing(allItems);
+    // Use Server Action instead of client-side service
+    const result = await generateMarketBriefingAction(allItems);
     setBriefing(result);
     setIsGenerating(false);
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-acid selection:text-black">
+    <div className="flex flex-col min-h-screen">
       {/* Visual Effects Layer */}
       <div className="fixed inset-0 bg-grid-pattern bg-[size:30px_30px] opacity-[0.03] pointer-events-none z-0"></div>
       <div className="fixed inset-0 bg-gradient-radial from-transparent to-background pointer-events-none z-0"></div>
@@ -75,9 +79,9 @@ const App: React.FC = () => {
                        <span className="text-[10px] text-zinc-500 font-mono uppercase">Generated via Gemini-2.5-Flash</span>
                      </div>
                    </div>
-                   <button onClick={() => setBriefing(null)} className="text-zinc-500 hover:text-white transition-colors">
+                   <Button variant="ghost" size="icon" onClick={() => setBriefing(null)} className="text-zinc-500 hover:text-white">
                      <X className="w-5 h-5" />
-                   </button>
+                   </Button>
                  </div>
                  
                  <div className="font-mono text-xs md:text-sm text-zinc-300 leading-relaxed border-l-2 border-acid pl-4 py-1">
@@ -124,6 +128,4 @@ const App: React.FC = () => {
       </footer>
     </div>
   );
-};
-
-export default App;
+}

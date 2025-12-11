@@ -1,57 +1,49 @@
 import React from 'react';
-import { Terminal, Github, Circle, Box, Cpu } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 export const TerminalHeader: React.FC = () => {
   return (
-    <header className="border-b border-border bg-[#030303]/90 backdrop-blur-md sticky top-0 z-50">
-      {/* Top Ticker Line - UPDATED BRANDING */}
-      <div className="bg-accent text-black text-[9px] md:text-[10px] py-1 px-4 flex justify-between items-center font-mono font-bold uppercase tracking-widest">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md">
+      {/* Top micro-ticker */}
+      <div className="w-full bg-acid text-black h-5 flex items-center justify-between px-4 text-[9px] font-mono font-bold uppercase tracking-widest select-none">
         <span className="flex items-center gap-2">
-          <Box className="w-3 h-3" />
-          0xMETA MICRO PROTOCOL // SYSTEM ONLINE
+          <span className="w-1.5 h-1.5 bg-black rounded-full animate-blink"></span>
+          SYSTEM ONLINE // V 4.0.2
         </span>
-        <span className="hidden md:inline opacity-80">POWERED BY X402 FACILITATOR</span>
+        <span className="hidden md:block">0xMeta x ItsGloria // CLONE</span>
       </div>
 
-      <div className="flex items-center justify-between px-4 h-14 md:px-6">
+      <div className="flex items-center justify-between px-4 md:px-6 h-14">
         {/* Left: Branding */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="relative w-8 h-8 flex items-center justify-center">
-              <div className="absolute inset-0 bg-accent/20 blur-md rounded-full"></div>
-              <div className="relative w-full h-full border border-border bg-black rounded-sm flex items-center justify-center group cursor-pointer overflow-hidden">
-                 <div className="absolute inset-0 bg-accent/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                 <span className="font-display font-bold text-accent text-lg relative z-10">0x</span>
-              </div>
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <div className="w-8 h-8 bg-white text-black flex items-center justify-center font-bold font-display text-lg tracking-tighter hover:bg-acid transition-colors duration-300">
+              0x
             </div>
-            <div className="flex flex-col">
-              <span className="font-display font-bold tracking-wide text-sm leading-none text-white">META TERMINAL</span>
-              <span className="text-[9px] text-zinc-500 font-mono tracking-widest mt-1 uppercase">Micro Protocol v1.0</span>
+            <div className="flex flex-col justify-center">
+              <span className="font-mono text-xs font-bold text-white tracking-widest leading-none">TERMINAL</span>
+              <span className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase mt-0.5 group-hover:text-acid transition-colors">Intelligence Grid</span>
             </div>
           </div>
-
-          <div className="hidden lg:flex h-4 w-px bg-border mx-2"></div>
           
-          <nav className="hidden lg:flex items-center gap-6">
-            <NavItem label="DASHBOARD" active />
-            <NavItem label="INTEL" />
+          <nav className="hidden lg:flex items-center gap-1">
+            <NavItem label="MARKET" active />
+            <NavItem label="AGENTS" />
             <NavItem label="NODES" />
+            <NavItem label="MEMPOOL" />
           </nav>
         </div>
 
-        {/* Right: Connect */}
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-zinc-500">
-            <span className="flex items-center gap-1"><Circle className="w-2 h-2 fill-accent text-accent animate-pulse" /> NET_SYNC</span>
+        {/* Right: Status */}
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex flex-col items-end text-[9px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">
+            <span>Block: 19284722</span>
+            <span className="text-acid">Syncing...</span>
           </div>
           
-          <button className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-sm text-xs font-mono transition-all text-zinc-200 group">
-            <Github className="w-3.5 h-3.5 group-hover:text-accent transition-colors" />
-            <span>SOURCE</span>
-          </button>
-          
-          <button className="flex items-center gap-2 px-4 py-1.5 bg-accent text-black font-bold border border-accent rounded-sm text-xs font-mono hover:bg-accent/90 transition-all uppercase tracking-tight shadow-[0_0_15px_rgba(184,255,1,0.3)]">
-            Connect
+          <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-xs font-mono text-zinc-300 hover:text-white transition-all uppercase tracking-wide group">
+            <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 group-hover:bg-acid transition-colors"></div>
+            Connect Wallet
           </button>
         </div>
       </div>
@@ -60,13 +52,10 @@ export const TerminalHeader: React.FC = () => {
 };
 
 const NavItem: React.FC<{ label: string; active?: boolean }> = ({ label, active }) => (
-  <button className={`
-    text-[11px] font-mono tracking-wider transition-colors relative py-4 uppercase
-    ${active ? 'text-accent' : 'text-zinc-500 hover:text-zinc-300'}
-  `}>
+  <button className={cn(
+    "px-4 py-1.5 text-[10px] font-mono tracking-widest uppercase transition-all border border-transparent rounded-sm",
+    active ? "text-white bg-zinc-900 border-zinc-800" : "text-zinc-500 hover:text-white hover:bg-zinc-900/50"
+  )}>
     {label}
-    {active && (
-      <span className="absolute bottom-0 left-0 w-full h-[2px] bg-accent shadow-[0_0_8px_rgba(184,255,1,0.8)]"></span>
-    )}
   </button>
 );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ColumnData } from '../types';
+import { cn } from "@/lib/utils";
 
 interface CategoryPillsProps {
   categories: ColumnData[];
@@ -11,43 +12,39 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({ categories, select
   const isAllSelected = selectedIds.length === 0;
 
   return (
-    <div className="w-full overflow-x-auto no-scrollbar py-4 px-4 md:px-6 bg-gradient-to-b from-[#030303] to-transparent sticky top-[137px] z-30">
-      <div className="flex items-center gap-2 min-w-max">
-        {/* 'ALL' Pill */}
-        <button
-          onClick={() => onToggle('all')}
-          className={`
-            px-4 py-1.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition-all duration-300
-            ${isAllSelected 
-              ? 'bg-accent text-black border-accent shadow-[0_0_10px_rgba(184,255,1,0.2)]' 
-              : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300'}
-          `}
-        >
-          // ALL SECTORS
-        </button>
+    <div className="sticky top-[148px] z-30 w-full overflow-hidden border-b border-border bg-background/80 backdrop-blur-md">
+      <div className="flex overflow-x-auto no-scrollbar py-3 px-4 md:px-6 gap-2">
+        <Pill 
+          label="ALL SECTORS" 
+          active={isAllSelected} 
+          onClick={() => onToggle('all')} 
+        />
+        
+        <div className="w-px h-5 bg-zinc-800 mx-2 shrink-0 self-center"></div>
 
-        <div className="w-px h-4 bg-zinc-800 mx-1"></div>
-
-        {/* Category Pills */}
-        {categories.map((cat) => {
-          const isSelected = selectedIds.includes(cat.id);
-          return (
-            <button
-              key={cat.id}
-              onClick={() => onToggle(cat.id)}
-              className={`
-                px-3 py-1.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border transition-all duration-200 flex items-center gap-2
-                ${isSelected 
-                  ? 'bg-zinc-100 text-black border-white' 
-                  : 'bg-transparent text-zinc-500 border-zinc-900 hover:border-zinc-700 hover:text-zinc-300'}
-              `}
-            >
-              {isSelected && <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>}
-              {cat.title}
-            </button>
-          );
-        })}
+        {categories.map((cat) => (
+          <Pill 
+            key={cat.id} 
+            label={cat.title} 
+            active={selectedIds.includes(cat.id)} 
+            onClick={() => onToggle(cat.id)} 
+          />
+        ))}
       </div>
     </div>
   );
 };
+
+const Pill: React.FC<{ label: string; active: boolean; onClick: () => void }> = ({ label, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap border",
+      active 
+        ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.15)]" 
+        : "bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-zinc-200"
+    )}
+  >
+    {label}
+  </button>
+);

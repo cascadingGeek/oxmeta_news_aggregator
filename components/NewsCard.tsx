@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ExternalLink, ArrowRight, Share2, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, Copy, Terminal } from 'lucide-react';
 import { NewsItem } from '../types';
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface NewsCardProps {
   item: NewsItem;
@@ -9,70 +11,63 @@ interface NewsCardProps {
 export const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const sentimentColor = 
-    item.sentiment === 'bullish' ? 'text-bullish' :
-    item.sentiment === 'bearish' ? 'text-bearish' :
-    'text-neutral';
-
   return (
     <div 
       onClick={() => setIsExpanded(!isExpanded)}
-      className={`
-        group relative pl-3 py-3 pr-2 border-l-2 transition-all cursor-pointer select-none
-        ${isExpanded 
-          ? 'bg-[#0A0A0A] border-accent shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]' 
-          : 'bg-transparent border-transparent hover:bg-white/[0.02] hover:border-zinc-800'}
-      `}
-    >
-      {/* Header Section */}
-      <div className="flex justify-between items-start gap-3">
-        <h4 className={`text-xs font-sans font-medium leading-snug transition-colors ${isExpanded ? 'text-white' : 'text-zinc-300 group-hover:text-zinc-200'} line-clamp-2`}>
-          {item.title}
-        </h4>
-        <span className={`text-[9px] font-mono uppercase tracking-wider shrink-0 ${sentimentColor} opacity-90`}>
-          {item.sentiment.substr(0, 4)}
-        </span>
-      </div>
-      
-      {/* Collapsed Meta */}
-      {!isExpanded && (
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-2">
-             <span className="text-[9px] text-zinc-600 font-mono">{item.source}</span>
-             <span className="text-[9px] text-zinc-700 font-mono">•</span>
-             <span className="text-[9px] text-zinc-600 font-mono">{item.time}</span>
-          </div>
-          <ArrowRight className="w-3 h-3 text-zinc-700 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
-        </div>
+      className={cn(
+        "group relative border-b border-zinc-900 hover:bg-zinc-900/30 transition-all cursor-pointer overflow-hidden",
+        isExpanded && "bg-zinc-900/50"
       )}
+    >
+      {/* Active Indicator Line */}
+      <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-acid scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300"></div>
 
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200 cursor-default">
-          <div className="h-px w-full bg-zinc-900 mb-3"></div>
-          
-          {/* Terminal Log Summary */}
-          <div className="font-mono text-[10px] text-zinc-400 leading-relaxed bg-black/50 p-2 rounded-sm border border-zinc-900 mb-3">
-            <span className="text-accent/50 mr-2">$</span>
-            {item.summary || "Retrieving on-chain data context... Signal verified."}
+      <div className="p-4 flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-4">
+          <h4 className={cn(
+            "text-xs md:text-sm font-medium font-sans leading-snug transition-colors",
+            isExpanded ? "text-white" : "text-zinc-300 group-hover:text-white"
+          )}>
+            {item.title}
+          </h4>
+          <Badge variant={item.sentiment} className="opacity-70 group-hover:opacity-100">
+            {item.sentiment.substr(0, 4)}
+          </Badge>
+        </div>
+
+        <div className="flex items-center justify-between mt-1">
+          <div className="flex items-center gap-3 text-[9px] font-mono text-zinc-600 uppercase tracking-wider">
+            <span className="text-zinc-500 group-hover:text-acid transition-colors">[{item.source}]</span>
+            <span>{item.time}</span>
           </div>
+          {isExpanded && <ArrowUpRight className="w-3 h-3 text-zinc-500" />}
+        </div>
+      </div>
 
-          {/* Actions & Footer */}
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
-              <button className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-sm hover:border-zinc-600 hover:text-white text-[9px] font-mono text-zinc-400 transition-colors">
-                <ExternalLink className="w-2.5 h-2.5" />
-                SOURCE
-              </button>
-              <button className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-sm hover:border-zinc-600 hover:text-white text-[9px] font-mono text-zinc-400 transition-colors">
-                <Share2 className="w-2.5 h-2.5" />
-                SHARE
-              </button>
+      {/* Expanded Data View */}
+      {isExpanded && (
+        <div className="px-4 pb-4 animate-accordion-down">
+          <div className="bg-black/40 border border-zinc-800 p-3 font-mono text-[10px] text-zinc-400 leading-relaxed relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-1 opacity-20">
+              <Terminal className="w-12 h-12" />
+            </div>
+            <div className="relative z-10">
+              <span className="text-acid block mb-1">{`> DECRYPTING SIGNAL...`}</span>
+              <p className="opacity-80">{item.summary}</p>
             </div>
             
-            <div className="flex items-center gap-1 text-[8px] font-mono text-zinc-600 tracking-widest uppercase opacity-70">
-              <ShieldCheck className="w-2.5 h-2.5 text-accent" />
-              0xMeta Micro Protocol
+            <div className="mt-3 pt-2 border-t border-dashed border-zinc-800 flex items-center justify-between">
+              <div className="flex gap-4">
+                <button className="hover:text-white transition-colors flex items-center gap-1">
+                  <span className="w-1 h-1 bg-zinc-600 rounded-full"></span> OPEN
+                </button>
+                <button className="hover:text-white transition-colors flex items-center gap-1">
+                  <span className="w-1 h-1 bg-zinc-600 rounded-full"></span> SHARE
+                </button>
+              </div>
+              <button className="text-zinc-600 hover:text-acid">
+                <Copy className="w-3 h-3" />
+              </button>
             </div>
           </div>
         </div>
