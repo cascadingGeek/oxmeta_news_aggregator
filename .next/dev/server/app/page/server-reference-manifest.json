@@ -1,0 +1,20 @@
+{
+  "node": {
+    "7f777acf4634578f5a44d018fe7de105112ed7cc10": {
+      "workers": {
+        "app/page": {
+          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "generateMarketBriefingAction",
+          "filename": "app/actions.ts"
+        }
+      },
+      "layer": {
+        "app/page": "action-browser"
+      },
+      "exportedName": "generateMarketBriefingAction",
+      "filename": "app/actions.ts"
+    }
+  },
+  "edge": {}
+}

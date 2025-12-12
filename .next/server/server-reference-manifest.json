@@ -1,0 +1,21 @@
+{
+  "node": {
+    "7f60afee68d3927df597c1b2eabdd60c6ca548c30b": {
+      "workers": {
+        "app/page": {
+          "moduleId": 57526,
+          "async": false,
+          "exportedName": "generateMarketBriefingAction",
+          "filename": "app/actions.ts"
+        }
+      },
+      "layer": {
+        "app/page": "action-browser"
+      },
+      "filename": "app/actions.ts",
+      "exportedName": "generateMarketBriefingAction"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "hw2SDnf805g62NrzI1nZrXhJoo13iuaRV82bduetprg="
+}
