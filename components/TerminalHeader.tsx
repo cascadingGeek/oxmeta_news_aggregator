@@ -1,16 +1,38 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
+import { Wallet, Loader2 } from 'lucide-react';
+import { useWallet } from '@/hooks/useWallet';
+import { useConfig } from '@/hooks/useNews';
 
-export const TerminalHeader: React.FC = () => {
+interface TerminalHeaderProps {
+  onPaymentClick?: () => void;
+}
+
+export const TerminalHeader: React.FC<TerminalHeaderProps> = () => {
+  const { data: config } = useConfig();
+  const {
+    isConnected,
+    walletAddress,
+    isConnecting,
+    connect,
+    shortenAddress
+  } = useWallet();
+
+  const handleConnect = () => {
+    if (config) {
+      connect(config);
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md">
       {/* Top micro-ticker */}
       <div className="w-full bg-acid text-black h-5 flex items-center justify-between px-4 text-[9px] font-mono font-bold uppercase tracking-widest select-none">
         <span className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-black rounded-full animate-blink"></span>
-          SYSTEM ONLINE // V 4.0.2
+          X402 PROTOCOL ENABLED // V 1.0
         </span>
-        <span className="hidden md:block">0xMeta x ItsGloria // CLONE</span>
+        <span className="hidden md:block">POWERED BY 0xMETA FACILITATOR</span>
       </div>
 
       <div className="flex items-center justify-between px-4 md:px-6 h-14">
@@ -30,21 +52,52 @@ export const TerminalHeader: React.FC = () => {
             <NavItem label="MARKET" active />
             <NavItem label="AGENTS" />
             <NavItem label="NODES" />
-            <NavItem label="MEMPOOL" />
+            <NavItem label="INTEL" />
           </nav>
         </div>
 
-        {/* Right: Status */}
+        {/* Right: Wallet Connection */}
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end text-[9px] font-mono text-zinc-500 uppercase tracking-wider leading-tight">
-            <span>Block: 19284722</span>
-            <span className="text-acid">Syncing...</span>
+            <span>Net: BASE-SEPOLIA</span>
+            <span className={cn(
+              "flex items-center gap-1",
+              isConnected ? "text-acid" : "text-zinc-500"
+            )}>
+              <span className={cn(
+                "w-1.5 h-1.5 rounded-full",
+                isConnected ? "bg-acid animate-pulse" : "bg-zinc-600"
+              )}></span>
+              {isConnected ? "CONNECTED" : "DISCONNECTED"}
+            </span>
           </div>
           
-          <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-xs font-mono text-zinc-300 hover:text-white transition-all uppercase tracking-wide group">
-            <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 group-hover:bg-acid transition-colors"></div>
-            Connect Wallet
-          </button>
+          {!isConnected ? (
+            <button 
+              onClick={handleConnect}
+              disabled={isConnecting || !config}
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-xs font-mono text-zinc-300 hover:text-white transition-all uppercase tracking-wide group disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isConnecting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span className="hidden sm:inline">Connecting...</span>
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Connect Wallet</span>
+                  <span className="sm:hidden">Connect</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-acid/30 text-xs font-mono text-acid">
+              <div className="w-1.5 h-1.5 rounded-full bg-acid group-hover:bg-acid transition-colors"></div>
+              <code className="hidden sm:inline">{shortenAddress(walletAddress || '')}</code>
+              <code className="sm:hidden">{walletAddress?.slice(0, 6)}...</code>
+            </div>
+          )}
         </div>
       </div>
     </header>

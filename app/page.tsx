@@ -1,40 +1,164 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TerminalHeader } from '@/components/TerminalHeader';
 import { Toolbar } from '@/components/Toolbar';
 import { NewsColumn } from '@/components/NewsColumn';
 import { CategoryPills } from '@/components/CategoryPills';
+import { useWallet } from '@/hooks/useWallet';
+import { useConfig, usePayAndFetchNews } from '@/hooks/useNews';
+import { useNewsStore } from '@/store/useNewsStore';
 import { CATEGORIES } from '@/constants';
 import { generateMarketBriefingAction } from './actions';
 import { X, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { NewsResponse, NewsItem, ColumnData } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Transform API news to match the UI format
+function transformNewsToItems(news: NewsResponse, category: string): NewsItem[] {
+  const allItems = [...news.cryptonews, ...news.twitter];
+  
+  return allItems.slice(0, 20).map((item, idx) => ({
+    id: `${category}-${idx}`,
+    title: item.title || item.text.substring(0, 100),
+    source: item.source === 'cryptonews' ? 'CryptoNews' : 'Twitter/X',
+    time: new Date(item.timestamp * 1000).toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }),
+    sentiment: (item.tokens && item.tokens.length > 3) ? 'bullish' : 
+               (item.tokens && item.tokens.length < 2) ? 'bearish' : 'neutral',
+    url: item.url || '#',
+    tags: item.tokens || [],
+    summary: item.long_context || item.short_context || item.text,
+  }));
+}
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [briefing, setBriefing] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    ['ai']
+  );
+  // Track loading state for each category
+  const [loadingCategories, setLoadingCategories] = useState<Set<string>>(new Set());
+  const { paidNews, setPaidNews } = useNewsStore();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  const { isConnected, connect } = useWallet();
+  const { data: config } = useConfig();
+  const { mutateAsync: payAndFetch } = usePayAndFetchNews();
+
+  // Merge static categories with paid ones
+  const displayCategories: ColumnData[] = CATEGORIES.map(cat => {
+    // We access the store state directly. 
+    // Since we are inside the component, this will re-render when store changes.
+    // However, we need to check expiration. 
+    // The store's getPaidNews is a function, but we can also just access the raw state and check here 
+    // OR allow the component to use the raw state and filter.
+    // Given the store structure, let's use the raw state for reactivity and check timestamp here or rely on the store's valid data if we filtered it.
+    // BETTER APPROACH for Reactivity: 
+    // The store exposes `paidNews`. We can use a helper or just check directly.
+    
+    // To avoid hydration mismatch, we must ensure this logic is client-side or handled gracefully.
+    // We'll use the raw data if available and valid.
+    
+    let paidItems: NewsItem[] | undefined;
+    
+    if (isClient) {
+        const data = paidNews[cat.id];
+        if (data && (Date.now() - data.timestamp < 5 * 60 * 60 * 1000)) {
+            paidItems = data.items;
+        }
+    }
+
+    if (paidItems) {
+      const bullish = paidItems.filter(i => i.sentiment === 'bullish').length;
+      const bearish = paidItems.filter(i => i.sentiment === 'bearish').length;
+      const neutral = paidItems.filter(i => i.sentiment === 'neutral').length;
+      
+      return {
+        id: cat.id,
+        title: cat.name,
+        items: paidItems,
+        bullishCount: bullish,
+        bearishCount: bearish,
+        neutralCount: neutral,
+      };
+    }
+    return {
+      id: cat.id,
+      title: cat.name,
+      items: [],
+      bullishCount: 0,
+      bearishCount: 0,
+      neutralCount: 0,
+    };
+  });
 
   const filteredCategories = selectedCategoryIds.length === 0
-    ? CATEGORIES
-    : CATEGORIES.filter(c => selectedCategoryIds.includes(c.id));
+    ? displayCategories
+    : displayCategories.filter(c => selectedCategoryIds.includes(c.id));
 
   const handleCategoryToggle = (id: string) => {
     if (id === 'all') {
-      setSelectedCategoryIds([]);
+      setSelectedCategoryIds(CATEGORIES.map(c => c.id));
       return;
     }
     setSelectedCategoryIds(prev => {
-      if (prev.includes(id)) return prev.filter(c => c !== id);
+      // If currently showing all (length == all), and user clicks one, 
+      // do we toggle it off or switch to specific selection?
+      // Logic: standard toggle.
+      if (prev.includes(id)) {
+          const newItem = prev.filter(c => c !== id);
+          return newItem.length === 0 ? CATEGORIES.map(c => c.id) : newItem;
+      }
       return [...prev, id];
     });
   };
 
+  const handlePayAndAccess = async (categoryId: string) => {
+    if (!config) return;
+
+    try {
+      if (!isConnected) {
+        await connect(config);
+      }
+      
+      // We'll proceed to pay immediately after connecting if possible, 
+      // or user might need to click again. 
+      // For better UX, let's try to proceed.
+      // However, connect is async. 
+      
+      // Update loading state
+      setLoadingCategories(prev => new Set(prev).add(categoryId));
+      
+      const news = await payAndFetch({ category: categoryId, config });
+      const items = transformNewsToItems(news, categoryId);
+      
+      setPaidNews(categoryId, items);
+    } catch (error) {
+      console.error("Payment or Connection failed", error);
+      // Optional: Add toast notification here
+    } finally {
+        setLoadingCategories(prev => {
+            const next = new Set(prev);
+            next.delete(categoryId);
+            return next;
+        });
+    }
+  };
+
   const handleGenerateBriefing = async () => {
     setIsGenerating(true);
-    const allItems = filteredCategories.flatMap(c => c.items).slice(0, 15);
-    // Use Server Action instead of client-side service
+    const allItems = filteredCategories.flatMap(c => c.items || []).slice(0, 15);
     const result = await generateMarketBriefingAction(allItems);
     setBriefing(result);
     setIsGenerating(false);
@@ -56,48 +180,10 @@ export default function Home() {
         />
 
         <CategoryPills 
-          categories={CATEGORIES}
+          categories={displayCategories}
           selectedIds={selectedCategoryIds}
           onToggle={handleCategoryToggle}
         />
-
-        {/* AI Briefing Modal */}
-        {briefing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-2xl bg-black border border-zinc-800 shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
-               {/* Decorative top bar */}
-               <div className="h-1 w-full bg-gradient-to-r from-acid to-transparent"></div>
-               
-               <div className="p-6">
-                 <div className="flex items-center justify-between mb-6">
-                   <div className="flex items-center gap-3">
-                     <div className="p-2 bg-acid/10 rounded-sm">
-                       <Sparkles className="w-4 h-4 text-acid" />
-                     </div>
-                     <div className="flex flex-col">
-                       <h3 className="text-sm font-bold font-mono text-white tracking-widest uppercase">Executive Alpha Brief</h3>
-                       <span className="text-[10px] text-zinc-500 font-mono uppercase">Generated via Gemini-2.5-Flash</span>
-                     </div>
-                   </div>
-                   <Button variant="ghost" size="icon" onClick={() => setBriefing(null)} className="text-zinc-500 hover:text-white">
-                     <X className="w-5 h-5" />
-                   </Button>
-                 </div>
-                 
-                 <div className="font-mono text-xs md:text-sm text-zinc-300 leading-relaxed border-l-2 border-acid pl-4 py-1">
-                   {briefing}
-                 </div>
-
-                 <div className="mt-6 flex items-center gap-2 text-[10px] font-mono text-zinc-600 border-t border-zinc-900 pt-4">
-                   <CheckCircle2 className="w-3 h-3 text-acid" />
-                   <span>CONFIDENCE SCORE: 98.4%</span>
-                   <span className="mx-2">•</span>
-                   <span>LATENCY: 42ms</span>
-                 </div>
-               </div>
-            </div>
-          </div>
-        )}
 
         {/* Bento Grid Layout */}
         <div className="p-4 md:p-6 pb-20 overflow-y-auto">
@@ -107,6 +193,8 @@ export default function Home() {
                 key={category.id}
                 data={category} 
                 filter={searchTerm} 
+                onPayAndAccess={handlePayAndAccess}
+                isLoading={loadingCategories.has(category.id)}
               />
             ))}
           </div>
@@ -118,12 +206,13 @@ export default function Home() {
         <div className="flex items-center gap-4">
            <span className="flex items-center gap-1.5 text-acid">
              <div className="w-1.5 h-1.5 bg-acid rounded-full animate-pulse"></div>
-             Node: Stable
+             X402 ACTIVE
            </span>
            <span className="hidden sm:inline">Gas: 15 Gwei</span>
+           <span className="hidden md:inline">ETH: $3,240.50</span>
         </div>
         <div>
-          <span>0xMeta Terminal // 2024</span>
+          <span>POWERED BY 0xMETA FACILITATOR</span>
         </div>
       </footer>
     </div>

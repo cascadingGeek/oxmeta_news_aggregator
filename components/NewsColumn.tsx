@@ -4,13 +4,24 @@ import { NewsCard } from './NewsCard';
 import { Hash, MoreHorizontal } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
+import { Button } from "@/components/ui/button";
+import { Zap } from 'lucide-react';
+
+import { NewsColumnSkeleton } from './NewsColumnSkeleton';
+
 interface NewsColumnProps {
   data: ColumnData;
   filter: string;
+  onPayAndAccess?: (id: string) => void;
+  isLoading?: boolean;
 }
 
-export const NewsColumn: React.FC<NewsColumnProps> = ({ data, filter }) => {
-  const filteredItems = data.items.filter(item => 
+export const NewsColumn: React.FC<NewsColumnProps> = ({ data, filter, onPayAndAccess, isLoading }) => {
+  if (isLoading) {
+    return <NewsColumnSkeleton />;
+  }
+
+  const filteredItems = data?.items?.filter(item => 
     item.title.toLowerCase().includes(filter.toLowerCase()) || 
     item.source.toLowerCase().includes(filter.toLowerCase())
   );
@@ -27,8 +38,8 @@ export const NewsColumn: React.FC<NewsColumnProps> = ({ data, filter }) => {
           <h3 className="text-xs font-mono font-bold text-zinc-100 tracking-widest uppercase">{data.title}</h3>
         </div>
         <div className="flex items-center gap-2">
-           <Badge variant="acid" className="px-1.5 py-0.5 rounded-full">{filteredItems.length}</Badge>
-           <MoreHorizontal className="w-3 h-3 text-zinc-600 cursor-pointer hover:text-white" />
+          <Badge variant="acid" className="px-1.5 py-0.5 rounded-full">{filteredItems?.length}</Badge>
+          <MoreHorizontal className="w-3 h-3 text-zinc-600 cursor-pointer hover:text-white" />
         </div>
       </div>
 
@@ -39,18 +50,30 @@ export const NewsColumn: React.FC<NewsColumnProps> = ({ data, filter }) => {
 
       {/* Scrollable Area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {filteredItems.length > 0 ? (
+        {filteredItems?.length > 0 ? (
           <div className="flex flex-col">
             {filteredItems.map((item) => (
               <NewsCard key={item.id} item={item} />
             ))}
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center gap-3 opacity-30">
-             <div className="w-12 h-12 border border-dashed border-zinc-600 rounded-full flex items-center justify-center">
+          <div className="h-full flex flex-col items-center justify-center gap-4 opacity-100 px-6">
+             <div className="w-12 h-12 border border-dashed border-zinc-600 rounded-full flex items-center justify-center opacity-30">
                <div className="w-1 h-1 bg-zinc-500 rounded-full animate-ping"></div>
              </div>
-             <span className="text-[9px] font-mono tracking-widest">AWAITING SIGNAL</span>
+             <span className="text-[9px] font-mono tracking-widest opacity-50">AWAITING SIGNAL</span>
+             
+             {onPayAndAccess && (
+               <Button 
+                 size="sm" 
+                 variant="outline" 
+                 className="w-full border-acid/20 hover:bg-acid/10 hover:border-acid/50 text-acid font-mono text-[10px] tracking-wider uppercase h-8"
+                 onClick={() => onPayAndAccess(data.id)}
+               >
+                 <Zap className="w-3 h-3 mr-2" />
+                 Pay & Access
+               </Button>
+             )}
           </div>
         )}
       </div>
