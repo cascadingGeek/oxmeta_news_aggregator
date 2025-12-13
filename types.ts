@@ -31,16 +31,19 @@ export interface UserPreferences {
 // API & PAYMENT TYPES (X402)
 // ============================================================================
 export interface ApiNewsItem {
+  oxmeta_id: string;
+  category: string;
   source: 'cryptonews' | 'twitter';
   title?: string;
   text: string;
-  long_context?: string;
-  short_context?: string;
+  sentiment: 'bullish' | 'bearish' | 'neutral';
+  sentiment_value: number;
   timestamp: number;
   tokens?: string[];
-  categories?: string[];
+  sources?: string[];
   url?: string;
 }
+
 
 export interface NewsResponse {
   cryptonews: ApiNewsItem[];

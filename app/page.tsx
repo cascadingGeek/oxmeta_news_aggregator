@@ -15,26 +15,24 @@ import { Button } from "@/components/ui/button";
 import { NewsResponse, NewsItem, ColumnData } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Transform API news to match the UI format
-function transformNewsToItems(news: NewsResponse, category: string): NewsItem[] {
+function transformNewsToItems(
+  news: NewsResponse,
+  category: string
+): NewsItem[] {
   const allItems = [...news.cryptonews, ...news.twitter];
-  
-  return allItems.slice(0, 20).map((item, idx) => ({
-    id: `${category}-${idx}`,
-    title: item.title || item.text.substring(0, 100),
+
+  return allItems.slice(0, 20).map((item) => ({
+    id: item.oxmeta_id,
+    title: item.title ?? item.text,
     source: item.source === 'cryptonews' ? 'CryptoNews' : 'Twitter/X',
-    time: new Date(item.timestamp * 1000).toLocaleString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }),
-    sentiment: (item.tokens && item.tokens.length > 3) ? 'bullish' : 
-               (item.tokens && item.tokens.length < 2) ? 'bearish' : 'neutral',
-    url: item.url || '#',
-    tags: item.tokens || [],
-    summary: item.long_context || item.short_context || item.text,
+    time: new Date(item.timestamp * 1000).toISOString(),
+    sentiment: item.sentiment as 'bullish' | 'bearish' | 'neutral',
+    url: item.sources?.[0] ?? item.url ?? '#',
+    tags: item.tokens ?? [],
+    summary: item.text, 
   }));
 }
+
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
