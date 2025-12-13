@@ -41,7 +41,7 @@ export default function Home() {
   const [briefing, setBriefing] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
-    ['ai']
+    ['rwa', 'macro', 'virtuals']
   );
   // Track loading state for each category
   const [loadingCategories, setLoadingCategories] = useState<Set<string>>(new Set());

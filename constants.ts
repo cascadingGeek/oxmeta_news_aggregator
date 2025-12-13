@@ -25,6 +25,8 @@ export const CATEGORIES: Category[] = [
   { id: 'token_listings', name: 'Token Listings', icon: '🚀' },
 ];
 
+export const FREE_CATEGORIES = ['rwa', 'macro', 'virtuals'];
+
 export const OXMETA_FEE_USDC = 0.01;
 export const OXMETA_FEE_USDC_WEI = 10000;
 

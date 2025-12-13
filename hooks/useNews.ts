@@ -53,3 +53,12 @@ export function usePayAndFetchNews() {
     },
   });
 }
+
+export function useFetchFreeNews(category: string) {
+  return useQuery({
+    queryKey: ['freeNews', category],
+    queryFn: () => apiService.getFreeNews(category),
+    enabled: ['rwa', 'macro', 'virtuals'].includes(category),
+    staleTime: 5 * 60 * 1000,
+  });
+}
