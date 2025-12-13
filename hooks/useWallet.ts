@@ -67,12 +67,20 @@ export function useWallet() {
     }
   }, []);
 
+  const disconnect = useCallback(() => {
+    walletService.disconnect();
+    setWalletAddress(null);
+    setIsConnected(false);
+    setError(null);
+  }, []);
+
   return {
     isConnected,
     walletAddress,
     isConnecting,
     error,
     connect,
+    disconnect,
     shortenAddress: walletService.shortenAddress,
     isMetaMaskInstalled: walletService.isMetaMaskInstalled,
   };

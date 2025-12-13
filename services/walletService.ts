@@ -182,6 +182,11 @@ export class WalletService {
     };
   }
 
+  disconnect(): void {
+    this.walletAddress = null;
+    this.web3 = null;
+  }
+
   getWalletAddress(): string | null {
     return this.walletAddress;
   }
