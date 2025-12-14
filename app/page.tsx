@@ -13,7 +13,8 @@ import { generateMarketBriefingAction } from './actions';
 import { X, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { NewsResponse, NewsItem, ColumnData } from '@/types';
-import { Skeleton } from '@/components/ui/skeleton';
+import { FREE_CATEGORIES } from '@/constants';
+import { apiService } from '@/services/apiService';
 
 function transformNewsToItems(
   news: NewsResponse,
@@ -49,6 +50,30 @@ export default function Home() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    const fetchFreeCategories = async () => {
+      for (const category of FREE_CATEGORIES) {
+        // skip if already cached & valid
+        const cached = paidNews[category];
+        if (cached && Date.now() - cached.timestamp < 5 * 60 * 60 * 1000) {
+          continue;
+        }
+
+        try {
+          const response = await apiService.getFreeNews(category);
+          const items = transformNewsToItems(response, category);
+
+          setPaidNews(category, items);
+        } catch (err) {
+          console.error(`Failed to auto-fetch ${category}`, err);
+        }
+      }
+    };
+
+    fetchFreeCategories();
+  }, []);
+
   
   const { isConnected, connect } = useWallet();
   const { data: config } = useConfig();
